@@ -1,0 +1,30 @@
+services:
+  gateway:
+    image: nginx:1.29-alpine
+    container_name: app-gateway
+    depends_on:
+      - pc-man
+    ports:
+      - "${GATEWAY_PORT:-80}:80"
+    volumes:
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    networks:
+      - frontend-gateway
+
+  pc-man:
+    build:
+      context: ../pc-man
+      dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: /pc-man/
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - frontend-gateway
+
+networks:
+  frontend-gateway:
+    driver: bridge
