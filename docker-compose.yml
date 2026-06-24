@@ -4,6 +4,7 @@ services:
     container_name: app-gateway
     depends_on:
       - pc-man
+      - chess-quest
     ports:
       - "${GATEWAY_PORT:-80}:80"
     volumes:
@@ -25,6 +26,49 @@ services:
     networks:
       - frontend-gateway
 
+  chess-quest:
+    build:
+      context: ../chess-quest
+      dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: /chess-quest
+        NEXT_PUBLIC_BASE_PATH: /chess-quest
+    environment:
+      APP_BASE_PATH: /chess-quest
+      NEXT_PUBLIC_BASE_PATH: /chess-quest
+      DATABASE_URL: postgresql://${CHESS_QUEST_POSTGRES_USER:-postgres}:${CHESS_QUEST_POSTGRES_PASSWORD:-postgres}@chess-quest-postgres:5432/${CHESS_QUEST_POSTGRES_DB:-chess_quest}
+    depends_on:
+      chess-quest-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - frontend-gateway
+      - chess-quest-db
+
+  chess-quest-postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${CHESS_QUEST_POSTGRES_DB:-chess_quest}
+      POSTGRES_USER: ${CHESS_QUEST_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${CHESS_QUEST_POSTGRES_PASSWORD:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    volumes:
+      - chess-quest-postgres-data:/var/lib/postgresql
+    networks:
+      - chess-quest-db
+
 networks:
   frontend-gateway:
     driver: bridge
+  chess-quest-db:
+    driver: bridge
+
+volumes:
+  chess-quest-postgres-data:

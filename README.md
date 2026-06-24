@@ -5,6 +5,7 @@
 Сейчас подключено:
 
 - `/pc-man/` -> сервис `pc-man`
+- `/chess-quest/` -> сервис `chess-quest` + внутренний Postgres `chess-quest-postgres`
 
 ## Запуск
 
@@ -18,7 +19,24 @@ docker compose up --build
 GATEWAY_PORT=8080 docker compose up --build
 ```
 
-Тогда приложение будет доступно по `http://host:8080/pc-man/`.
+Тогда приложения будут доступны по:
+
+- `http://host:8080/pc-man/`
+- `http://host:8080/chess-quest/`
+
+## chess-quest и Postgres
+
+`chess-quest` собирается из соседнего каталога `../chess-quest` с base path `/chess-quest` и не публикует отдельный внешний порт. Nginx проксирует путь `/chess-quest/` без обрезания префикса, потому что Next.js собран с `NEXT_PUBLIC_BASE_PATH=/chess-quest`.
+
+Для `chess-quest` поднимается отдельный внутренний Postgres:
+
+- сервис: `chess-quest-postgres`
+- volume: `chess-quest-postgres-data`
+- database: `${CHESS_QUEST_POSTGRES_DB:-chess_quest}`
+- user: `${CHESS_QUEST_POSTGRES_USER:-postgres}`
+- password: `${CHESS_QUEST_POSTGRES_PASSWORD:-postgres}`
+
+При старте контейнер `chess-quest` выполняет `prisma migrate deploy`, затем `npm run db:seed`. Seed идемпотентный: встроенные карты и карточки создаются или обновляются через upsert.
 
 ## Как добавить следующее приложение
 
