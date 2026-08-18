@@ -6,6 +6,7 @@
 
 - `/pc-man/` -> сервис `pc-man`
 - `/chess-quest/` -> сервис `chess-quest` + внутренний Postgres `chess-quest-postgres`
+- `/foxy-chat/` -> сервис `foxy-chat` с локальными данными в отдельном Docker volume
 
 ## Запуск
 
@@ -23,6 +24,7 @@ GATEWAY_PORT=8080 docker compose up --build
 
 - `http://host:8080/pc-man/`
 - `http://host:8080/chess-quest/`
+- `http://host:8080/foxy-chat/`
 
 ## chess-quest и Postgres
 
@@ -38,12 +40,26 @@ GATEWAY_PORT=8080 docker compose up --build
 
 При старте контейнер `chess-quest` выполняет `prisma migrate deploy`, затем `npm run db:seed`. Seed идемпотентный: встроенные карты и карточки создаются или обновляются через upsert.
 
+## Foxy Chat и локальные данные
+
+`foxy-chat` собирается из соседнего каталога `../foxy-chat` с base path `/foxy-chat` и доступен только через общий gateway. Отдельный внешний порт приложение не публикует; внутри Docker-сети оно слушает порт `3000`.
+
+Пользователи, комнаты и сообщения хранятся в каталоге `/app/data`. Каталог подключён как named volume `foxy-chat-data`, поэтому данные сохраняются при перезапуске или пересоздании контейнера приложения. Проверка готовности выполняется через `/foxy-chat/api/health`, и gateway запускается после перехода `foxy-chat` в состояние `healthy`.
+
+При первом запуске создаётся администратор `admin` с паролем `admin2pass`. Для публичного стенда пароль нужно переопределить без пересборки образа:
+
+```bash
+FOXY_CHAT_ADMIN_PASSWORD='другой-надёжный-пароль' docker compose up -d --build
+```
+
+Ник также можно переопределить переменной `FOXY_CHAT_ADMIN_NICKNAME`.
+
 ## Как добавить следующее приложение
 
-1. Добавить новый сервис в [docker-compose.yml](/home/rest/intabia/app-docker-container/docker-compose.yml) по аналогии с `pc-man`.
+1. Добавить новый сервис в [docker-compose.yml](/home/rest/proj/app-docker-container/docker-compose.yml) по аналогии с `pc-man`.
 2. Указать для него свой `build.context` и свой `APP_BASE_PATH`, например `/crm/`.
 3. Не публиковать внешний `ports`; достаточно `expose: - "80"` или даже можно обойтись без него.
-4. Добавить в [nginx/conf.d/default.conf](/home/rest/intabia/app-docker-container/nginx/conf.d/default.conf) два правила:
+4. Добавить в [nginx/conf.d/default.conf](/home/rest/proj/app-docker-container/nginx/conf.d/default.conf) два правила:
    - `location = /crm { return 301 /crm/; }`
    - `location /crm/ { proxy_pass http://crm/; ... }`
 5. Убедиться, что само приложение собрано с тем же base path и его router использует тот же префикс.

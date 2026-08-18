@@ -52,7 +52,9 @@
       }
 
       a {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 20px;
         padding: 20px 24px;
         border-radius: 18px;
         text-decoration: none;
@@ -72,6 +74,28 @@
         box-shadow: 0 16px 36px rgba(37, 55, 84, 0.12);
       }
 
+      .app-icon {
+        flex: 0 0 auto;
+        width: 82px;
+        height: 82px;
+        object-fit: contain;
+      }
+
+      .app-icon-foxy {
+        display: grid;
+        place-items: center;
+        border-radius: 24px;
+        background: linear-gradient(145deg, #ff7a59, #f04476);
+        color: #fff7ed;
+        font-size: 44px;
+        line-height: 1;
+        box-shadow: 0 10px 24px rgba(240, 68, 118, 0.24);
+      }
+
+      .app-copy {
+        min-width: 0;
+      }
+
       strong {
         display: block;
         margin-bottom: 6px;
@@ -81,6 +105,26 @@
       span {
         color: #5f6f88;
       }
+
+      @media (max-width: 560px) {
+        main {
+          padding: 36px 16px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+
+        a {
+          gap: 16px;
+          padding: 18px;
+        }
+
+        .app-icon {
+          width: 68px;
+          height: 68px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -89,15 +133,39 @@
       <p>Через этот gateway приложения публикуются по префиксам путей через один общий nginx.</p>
       <ul>
         <li>
-          <a href="/pc-man/">
-            <strong>pc-man</strong>
-            <span>Игра доступна по префиксу <code>/pc-man/</code>.</span>
+          <a href="/foxy-chat/">
+            <span class="app-icon app-icon-foxy" aria-hidden="true">🦊</span>
+            <span class="app-copy">
+              <strong>Foxy Chat</strong>
+              <span>Комнаты, сообщения и Markdown по префиксу <code>/foxy-chat/</code>.</span>
+            </span>
           </a>
         </li>
         <li>
           <a href="/chess-quest/">
-            <strong>chess-quest</strong>
-            <span>Шахматный квест доступен по префиксу <code>/chess-quest/</code>.</span>
+            <img class="app-icon" src="/chess-game.png" alt="" width="82" height="82" />
+            <span class="app-copy">
+              <strong>chess-quest</strong>
+              <span>Шахматный квест доступен по префиксу <code>/chess-quest/</code>.</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="/tu.html">
+            <img class="app-icon" src="/multiply.png" alt="" width="82" height="82" />
+            <span class="app-copy">
+              <strong>Тест таблицы умножения Знайка</strong>
+              <span>Проверка таблицы умножения и деления.</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="/pc-man/">
+            <img class="app-icon" src="/pc-man.png" alt="" width="82" height="82" />
+            <span class="app-copy">
+              <strong>pc-man</strong>
+              <span>Игра доступна по префиксу <code>/pc-man/</code>.</span>
+            </span>
           </a>
         </li>
       </ul>

@@ -3,8 +3,12 @@ services:
     image: nginx:1.29-alpine
     container_name: app-gateway
     depends_on:
-      - pc-man
-      - chess-quest
+      pc-man:
+        condition: service_started
+      chess-quest:
+        condition: service_started
+      foxy-chat:
+        condition: service_healthy
     ports:
       - "4173:80"
     volumes:
@@ -59,10 +63,37 @@ services:
       timeout: 5s
       retries: 20
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CHESS_QUEST_POSTGRES_PORT:-15432}:5432"
     volumes:
       - chess-quest-postgres-data:/var/lib/postgresql
     networks:
       - chess-quest-db
+
+  foxy-chat:
+    build:
+      context: ../foxy-chat
+      dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: /foxy-chat
+    environment:
+      APP_BASE_PATH: /foxy-chat
+      DATA_DIR: /app/data
+      ADMIN_NICKNAME: ${FOXY_CHAT_ADMIN_NICKNAME:-admin}
+      ADMIN_PASSWORD: ${FOXY_CHAT_ADMIN_PASSWORD:-admin2pass}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/foxy-chat/api/health').then(response => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - foxy-chat-data:/app/data
+    networks:
+      - frontend-gateway
 
 networks:
   frontend-gateway:
@@ -72,3 +103,4 @@ networks:
 
 volumes:
   chess-quest-postgres-data:
+  foxy-chat-data:
