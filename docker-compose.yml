@@ -68,6 +68,12 @@ services:
     depends_on:
       chess-quest-postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/chess-quest/auth').then(response => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
     restart: unless-stopped
     expose:
       - "3000"
@@ -105,6 +111,11 @@ services:
       DATA_DIR: /app/data
       ADMIN_NICKNAME: ${FOXY_CHAT_ADMIN_NICKNAME:-admin}
       ADMIN_PASSWORD: ${FOXY_CHAT_ADMIN_PASSWORD:-admin2pass}
+      SHARED_AUTH_DATABASE_URL: postgresql://${CHESS_QUEST_POSTGRES_USER:-postgres}:${CHESS_QUEST_POSTGRES_PASSWORD:-postgres}@chess-quest-postgres:5432/${CHESS_QUEST_POSTGRES_DB:-chess_quest}
+      SHARED_AUTH_CONFLICT_POLICY: chess-quest
+    depends_on:
+      chess-quest:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/foxy-chat/api/health').then(response => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"]
       interval: 5s
@@ -118,6 +129,7 @@ services:
       - foxy-chat-data:/app/data
     networks:
       - frontend-gateway
+      - chess-quest-db
 
 networks:
   frontend-gateway:
