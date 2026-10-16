@@ -4,6 +4,8 @@
 
 Сейчас подключено:
 
+- `/smena/` -> школьное расписание [Смена](https://github.com/relativist/smena), отдельная база в существующем PostgreSQL
+
 - `/pc-man/` -> сервис `pc-man`
 - `/chess-quest/` -> сервис `chess-quest` + внутренний Postgres `chess-quest-postgres`
 - `/foxy-chat/` -> сервис `foxy-chat` с локальными данными в отдельном Docker volume
@@ -98,3 +100,9 @@ location /crm/ {
   proxy_redirect off;
 }
 ```
+
+## Смена
+
+Сервис собирается из `../smena` с `APP_BASE_PATH=/smena/`; путь контекста можно переопределить через `SMENA_BUILD_CONTEXT`. Для локального расположения исходников используйте `SMENA_BUILD_CONTEXT=/home/rest/ai/proj/smena`. В серверном `.env` требуется `SMENA_POSTGRES_PASSWORD` — пароль отдельной роли `smena` в существующем `chess-quest-postgres`. Отдельная база `smena` создаётся один раз до запуска приложения. Конфигурация не создаёт второй PostgreSQL и не меняет базу шахматного приложения.
+
+Gateway снимает префикс `/smena/`, приложение слушает внутренний порт 3001. На главной странице отображается карточка с изображением школьника. Резервные копии перед восстановлением архивов хранятся в томе `smena-backups`. [Размещение на rich и самостоятельный Compose](https://github.com/relativist/smena/blob/main/docs/deployment.md).

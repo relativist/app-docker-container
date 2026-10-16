@@ -3,6 +3,8 @@ services:
     image: nginx:1.29-alpine
     container_name: app-gateway
     depends_on:
+      smena:
+        condition: service_healthy
       pc-man:
         condition: service_started
       chess-quest:
@@ -17,6 +19,28 @@ services:
     restart: unless-stopped
     networks:
       - frontend-gateway
+
+  smena:
+    build:
+      context: ${SMENA_BUILD_CONTEXT:-../smena}
+      dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: /smena/
+    environment:
+      SMENA_DATABASE_URL: postgresql://smena:${SMENA_POSTGRES_PASSWORD:?Set SMENA_POSTGRES_PASSWORD}@chess-quest-postgres:5432/smena
+      SMENA_BASE_PATH: /smena/
+      SMENA_TRUST_PROXY: "1"
+    depends_on:
+      chess-quest-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "3001"
+    volumes:
+      - smena-backups:/app/backups
+    networks:
+      - frontend-gateway
+      - chess-quest-db
 
   pc-man:
     build:
@@ -102,5 +126,6 @@ networks:
     driver: bridge
 
 volumes:
+  smena-backups:
   chess-quest-postgres-data:
   foxy-chat-data:
